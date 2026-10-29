@@ -1,6 +1,6 @@
 // Talks to the FastAPI backend.
 // Change VITE_API_URL in a .env file if the backend runs somewhere else.
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export async function analyzeImage(file) {
   const formData = new FormData();
