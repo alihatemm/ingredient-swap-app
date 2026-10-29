@@ -218,3 +218,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Node / React
+node_modules/
+frontend/dist/
+
+# OS files
+.DS_Store
+Thumbs.db
