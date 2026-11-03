@@ -5,6 +5,7 @@ export default function ImageUpload({ file, previewUrl, onFileChange, onAnalyze,
   function handleChange(event) {
     const selected = event.target.files[0];
     onFileChange(selected || null);
+    event.target.value = ""; // so picking the same file again (e.g. after a rejection) still fires
   }
 
   return (
@@ -12,7 +13,7 @@ export default function ImageUpload({ file, previewUrl, onFileChange, onAnalyze,
       <h2>1. Upload an ingredient list</h2>
 
       <label className="file-picker">
-        <input type="file" accept="image/*" onChange={handleChange} disabled={loading} />
+        <input type="file" accept="image/png,image/jpeg,image/webp,image/bmp,image/tiff" onChange={handleChange} disabled={loading} />
         <span>{file ? "Choose a different image" : "Choose an image"}</span>
       </label>
 
