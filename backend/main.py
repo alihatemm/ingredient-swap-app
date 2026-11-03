@@ -5,15 +5,21 @@ Flow for POST /analyze:
     uploaded image -> OCR text -> parsed ingredients -> healthier swaps -> JSON
 """
 
+import io
+
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from PIL import Image
 
 from ingredient_parser import parse_ingredients
 from ocr import OCRError, extract_text
 from replacements import find_replacements
 
 ALLOWED_TYPES = {"image/png", "image/jpeg", "image/jpg", "image/webp", "image/bmp", "image/tiff"}
+# Real formats as Pillow names them. Some phone cameras save JPEGs that Pillow reads as MPO.
+ALLOWED_FORMATS = {"PNG", "JPEG", "MPO", "WEBP", "BMP", "TIFF"}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+UNSUPPORTED_TYPE_MESSAGE = "Unsupported file type. Please upload a PNG, JPG, WEBP, BMP or TIFF image."
 
 app = FastAPI(title="Ingredient Swap App")
 
@@ -38,16 +44,23 @@ async def analyze(file: UploadFile = File(...)):
 
     # 1. Validate the upload.
     if file.content_type not in ALLOWED_TYPES:
-        raise HTTPException(
-            status_code=400,
-            detail="Unsupported file type. Please upload a PNG, JPG, WEBP, BMP or TIFF image.",
-        )
+        raise HTTPException(status_code=400, detail=UNSUPPORTED_TYPE_MESSAGE)
 
     image_bytes = await file.read()
     if not image_bytes:
         raise HTTPException(status_code=400, detail="The uploaded file is empty.")
     if len(image_bytes) > MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="The image is too large (max 10 MB).")
+
+    # Check the real format from the file's contents; the content type is only a label.
+    # Files Pillow can't open (corrupt, or too many pixels) get their clear error from OCR below.
+    try:
+        with Image.open(io.BytesIO(image_bytes)) as image:
+            real_format = image.format
+    except (Image.DecompressionBombError, OSError):  # UnidentifiedImageError is an OSError
+        real_format = None
+    if real_format is not None and real_format not in ALLOWED_FORMATS:
+        raise HTTPException(status_code=400, detail=UNSUPPORTED_TYPE_MESSAGE)
 
     # 2. OCR: image -> text.
     try:
