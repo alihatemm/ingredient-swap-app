@@ -40,6 +40,10 @@ def extract_text(image_bytes):
     try:
         image = Image.open(io.BytesIO(image_bytes))
         image.load()
+    except Image.DecompressionBombError as error:
+        raise OCRError(
+            "The image resolution is too large to process. Please upload a lower-resolution photo."
+        ) from error
     except (UnidentifiedImageError, OSError) as error:
         raise OCRError("The file could not be read as an image.") from error
 

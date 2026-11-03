@@ -140,6 +140,7 @@ Example response from `POST /analyze`:
 | Empty file | 400 | The uploaded file is empty |
 | Over 10 MB | 400 | The image is too large |
 | Corrupt / unreadable image | 422 | The file could not be read as an image |
+| Resolution too large (over ~179 megapixels) | 422 | The image resolution is too large to process |
 | Image with no readable text | 422 | No text was found in the image |
 | Tesseract missing | 422 | Tesseract OCR is not installed on the server |
 
