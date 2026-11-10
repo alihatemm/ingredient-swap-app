@@ -2,10 +2,12 @@
 
 | File | Card | What it does |
 |---|---|---|
-| `src/components/ImageUpload.jsx` | Image Upload | File picker, filename, image preview, analyze button |
-| `src/api.js` | End-to-End Integration | Sends the image to `POST /analyze` and turns errors into readable messages |
-| `src/App.jsx` | End-to-End Integration | Holds the state: selected file, loading, error, result |
-| `src/components/SwapResults.jsx` | Display Swap Suggestions | Shows original → replacement, the ingredient list and the raw OCR text |
+| `src/components/ImageUpload.jsx` | #1207 Upload | Click or drag & drop, preview, file name/size/dimensions, Remove, analyze button with spinner |
+| `src/validation.js` | #1207 Validation | Checks the file in the browser before upload (type, HEIC, empty, damaged, too small, too big) and shrinks photos over 4000 px |
+| `src/components/SwapResults.jsx` | #1206 Results | Summary counts, OCR details and warnings, "Instead of → Try" swaps with category badges, highlighted ingredients, raw OCR text |
+| `src/App.jsx` | #1206 / Integration | Two-column layout; state for file, loading, error and result |
+| `src/App.css` | #1206 | Styles; one column below 860 px |
+| `src/api.js` | Integration | Sends the image to `POST /analyze` and turns errors into readable messages |
 
 Run (backend must be running on port 8000):
 

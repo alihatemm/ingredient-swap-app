@@ -1,13 +1,16 @@
 # ingredient-swap-app
-Sprint A project that extracts ingredients from food-label images and suggests healthier replacements.
+Capstone project that extracts ingredients from food-label images and suggests healthier replacements.
+
+**Sprint A** built the working flow. **Sprint B** (due Nov 13) makes it reliable on harder photos, adds more swaps, polishes the UI and tightens upload validation. See [What changed in Sprint B](#what-changed-in-sprint-b) and the full evidence in [docs/SPRINT_B_EVIDENCE.md](docs/SPRINT_B_EVIDENCE.md).
 
 ## What it does
 
-1. You upload a photo of a food label's ingredient list.
-2. The backend reads the text from the image with OCR (Tesseract).
-3. The text is split into a clean list of ingredients.
-4. Each ingredient is checked against a list of common swaps.
-5. The page shows each match as **original ingredient → healthier replacement**, with a short reason.
+1. You upload (or drag in) a photo of a food label's ingredient list.
+2. The upload is checked in the browser and again on the server.
+3. The backend reads the text with OCR (Tesseract). It straightens sideways photos and tries a few image clean-ups, keeping whichever reads best.
+4. The text is split into a clean list of ingredients, and small OCR misreads are repaired.
+5. Each ingredient is checked against 63 common swaps.
+6. The page shows each match as **Instead of → Try**, with a short reason and category.
 
 ## Stack
 
@@ -16,7 +19,8 @@ Sprint A project that extracts ingredients from food-label images and suggests h
 | Frontend | React (Vite) |
 | Backend | FastAPI (Python) |
 | OCR | Tesseract via `pytesseract` + Pillow |
-| Replacement data | Python dictionary (`backend/replacements.py`) |
+| Replacement data | JSON file (`backend/data/replacements.json`) |
+| Tests | pytest + FastAPI TestClient |
 
 ## Project structure
 
@@ -24,24 +28,29 @@ Sprint A project that extracts ingredients from food-label images and suggests h
 ingredient-swap-app/
 ├── backend/
 │   ├── main.py               # FastAPI app: GET / (health) and POST /analyze
-│   ├── ocr.py                # Ingredient Text Extraction (image -> text)
-│   ├── ingredient_parser.py  # text -> list of ingredients
-│   ├── replacements.py       # Ingredient Replacement Logic (swap dictionary)
-│   └── requirements.txt
+│   ├── validation.py         # #1207 upload checks with friendly messages
+│   ├── ocr.py                # #1204 image -> text (rotation + 3 clean-ups, best one wins)
+│   ├── ingredient_parser.py  # text -> list of ingredients, OCR typo fixes
+│   ├── replacements.py       # #1205 matching logic
+│   ├── data/replacements.json  # #1205 the swap database (edit this to add swaps)
+│   ├── evaluate_ocr.py       # #1204 prints an OCR accuracy table for the sample images
+│   ├── tests/                # pytest tests (80 tests)
+│   ├── requirements.txt
+│   └── requirements-dev.txt  # pytest + httpx, only needed to run tests
 ├── frontend/
-│   ├── index.html
-│   ├── package.json
-│   ├── vite.config.js
 │   └── src/
-│       ├── main.jsx
-│       ├── App.jsx                     # page state: file, loading, error, result
+│       ├── App.jsx                     # page layout and state
 │       ├── App.css
 │       ├── api.js                      # sends the image to /analyze
+│       ├── validation.js               # #1207 checks in the browser before upload
 │       └── components/
-│           ├── ImageUpload.jsx         # Image Upload card
-│           └── SwapResults.jsx         # Display Swap Suggestions card
-├── sample-images/
-│   └── cookie-label.png      # supported test image for the demo
+│           ├── ImageUpload.jsx         # pick / drag & drop, preview, file info
+│           └── SwapResults.jsx         # #1206 summary, swaps, ingredients, OCR text
+├── sample-images/            # 6 test labels (clean + 5 hard ones) and expected.json
+│   └── generate_samples.py   # recreates the hard test images
+├── docs/
+│   ├── SPRINT_B_EVIDENCE.md  # card-by-card evidence and test results
+│   └── sprint-b-evidence/    # screenshots
 ├── README.md
 └── IMPLEMENTATION_PLAN.md
 ```
@@ -78,13 +87,13 @@ pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
 
-- Health check: http://localhost:8000 → `{"status": "ok", ...}`
-- Interactive API docs: http://localhost:8000/docs (you can test `/analyze` there)
+- Health check: http://127.0.0.1:8000 → `{"status": "ok", "swaps_available": 63, ...}`
+- Interactive API docs: http://127.0.0.1:8000/docs (you can test `/analyze` there)
 
 Quick test from a second terminal (repo root):
 
 ```bash
-curl -F "file=@sample-images/cookie-label.png" http://localhost:8000/analyze
+curl -F "file=@sample-images/cereal-rotated.jpg" http://127.0.0.1:8000/analyze
 ```
 
 ## Run the frontend
@@ -97,72 +106,103 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173, choose `sample-images/cookie-label.png`, and click **Find healthier swaps**.
+Open http://localhost:5173, choose any image from `sample-images/`, and click **Find healthier swaps**.
 
-The frontend calls `http://localhost:8000` by default. To use another backend URL, create `frontend/.env` with `VITE_API_URL=http://your-host:port`.
+The frontend calls `http://127.0.0.1:8000` by default. To use another backend URL, create `frontend/.env` with `VITE_API_URL=http://your-host:port`.
+
+## Run the tests
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+python -m pytest            # 80 tests: swaps, parser, validation, OCR on every sample, API
+python evaluate_ocr.py      # OCR accuracy table for the sample images
+```
 
 ## How the flow works
 
 ```
-React (ImageUpload)                     FastAPI (/analyze)
-  choose image  ──── POST multipart ──▶  1. validate file type / size / empty
-  preview + name                         2. ocr.extract_text()       image -> text
-  loading state                          3. parse_ingredients()      text -> ["sugar", "palm oil", ...]
-                                         4. find_replacements()      ingredient -> healthier swap
-React (SwapResults)  ◀──── JSON ───────  5. return result
-  original → replacement
-  ingredients found + raw OCR text
+React (ImageUpload + validation.js)          FastAPI (/analyze)
+  pick / drop image, checked in browser ─ POST ─▶ 1. validate_upload()   type, size, real format, pixels
+  preview, name, size, Remove                     2. read_label()        rotate if needed, 3 clean-ups,
+  spinner while loading                                                   keep the one that reads best
+                                                  3. parse_ingredients() text -> ["sugar", "palm oil", ...]
+                                                     fix_ocr_typos()     "smortening" -> "shortening"
+                                                  4. find_replacements() ingredient -> healthier swap
+React (SwapResults)  ◀──────── JSON ──────────── 5. return result
+  summary · Instead of → Try · ingredients · raw OCR text
 ```
 
-Example response from `POST /analyze`:
+Example response from `POST /analyze`. The first four fields are unchanged from Sprint A; `category`, `ocr` and `corrections` are new:
 
 ```json
 {
-  "filename": "cookie-label.png",
-  "extracted_text": "INGREDIENTS:\nEnriched flour (wheat flour, niacin, reduced iron),\nsugar, palm oil, ...",
-  "ingredients": ["enriched flour", "wheat flour", "niacin", "reduced iron", "sugar", "palm oil", "..."],
+  "filename": "crackers-blurry-lowres.jpg",
+  "extracted_text": "INGREDIENTS:\nEnnched wheat flour, soybean of. cheddar cheese ...",
+  "ingredients": ["ennched wheat flour", "cheddar cheese", "shortening", "sugar", "..."],
   "suggestions": [
     {
-      "original": "palm oil",
-      "matched": "palm oil",
-      "replacement": "olive oil",
-      "reason": "Less saturated fat and more heart-healthy fats."
+      "original": "shortening",
+      "matched": "shortening",
+      "replacement": "olive oil or unsweetened applesauce",
+      "reason": "Cuts saturated and trans fats.",
+      "category": "fat & oil"
     }
-  ]
+  ],
+  "ocr": {"method": "standard", "confidence": 59, "rotated": 0},
+  "corrections": [{"from": "smortening", "to": "shortening"}]
 }
 ```
 
-### Errors the backend handles
+### Upload errors
 
-| Situation | Status | Message |
+Checked in the browser first (`frontend/src/validation.js`), then again on the server (`backend/validation.py`):
+
+| Situation | Status | Message (shortened) |
 |---|---|---|
-| Not an image (e.g. .pdf, .txt) | 400 | Unsupported file type |
-| Empty file | 400 | The uploaded file is empty |
-| Over 10 MB | 400 | The image is too large |
-| Corrupt / unreadable image | 422 | The file could not be read as an image |
-| Resolution too large (over ~179 megapixels) | 422 | The image resolution is too large to process |
-| Image with no readable text | 422 | No text was found in the image |
-| Tesseract missing | 422 | Tesseract OCR is not installed on the server |
+| Wrong file kind (.pdf, .txt, .gif…) | 400 | '.pdf' files are not supported. Please upload a PNG, JPG, WEBP, BMP or TIFF image. |
+| iPhone HEIC photo | 400 | iPhone HEIC photos are not supported yet. Please export the photo as JPG… |
+| Image renamed to a wrong extension (GIF saved as .png) | 400 | Unsupported file type… |
+| Empty file | 400 | The uploaded file is empty. Please choose the photo again. |
+| Over 10 MB | 400 | The image is too large (12.3 MB). The limit is 10 MB. |
+| Damaged / not really an image | 422 | The file is damaged or is not really an image… |
+| Smaller than 50 px | 422 | The image is too small to read (30x20 pixels)… |
+| Resolution too large (over ~179 megapixels) | 422 | The image resolution is too large to process… |
+| Image with no readable text | 422 | No text was found in the image… |
+| Tesseract missing | 422 | Tesseract OCR is not installed on the server… |
 
-The frontend shows these messages in a red box, plus a clear message if the backend is not running.
+Photos larger than 4000 px are shrunk in the browser before upload, and the frontend shows a clear message if the backend is not running.
+
+## What changed in Sprint B
+
+| Card | Owner | Change |
+|---|---|---|
+| #1204 Improve OCR Accuracy | Mohamed | Sideways photos are turned upright; three clean-ups ("standard", "even lighting" for shadows, "sharp black & white" for blur) are tried and the best is kept; small photos are enlarged; Tesseract reads the label as one text block; OCR misreads like "smortening" are fixed; parser bugs fixed. **Accuracy on the 6 test labels: 50% → 88%** of expected ingredients, swaps found 19 → 37. |
+| #1205 Expand Replacement Database | Henry | Swaps moved to `data/replacements.json` and grown from 28 to **63** (36 new, each with replacement, reason and category). New `never_swap` list fixes Sprint A false positives such as *whole wheat flour → whole wheat flour* and *cocoa butter → olive oil*. |
+| #1206 Improve Frontend UI | Anthony | Two-column layout on laptops (stacks on narrow screens), summary counts, "Instead of → Try" table with category badges, highlighted ingredients that have swaps, OCR details, low-confidence warning, spinner and empty state. |
+| #1207 Upload & Validation | Alejandro | Matching checks in the browser and on the server: extension, type, HEIC, empty, size, real format, too-small images. Drag & drop, file size/dimensions shown, Remove button. Builds on the large-image handling already merged in PR #2. |
+| #1208 Integration & Evidence | Ali | 80 automated backend tests, browser end-to-end run with screenshots, OCR accuracy script, docs and evidence file. |
 
 ## Adding more swaps
 
-Open `backend/replacements.py` and add an entry to `REPLACEMENTS`:
+Open `backend/data/replacements.json` and add an entry under `"swaps"`:
 
-```python
-"white sugar": {
-    "replacement": "coconut sugar",
-    "reason": "Less refined.",
-},
+```json
+"white sugar": {"replacement": "coconut sugar", "reason": "Less refined.", "category": "sweetener"}
 ```
 
-Matching is by whole words, and the longest match wins (so "high fructose corn syrup" beats "corn syrup").
+- Matching is by whole words, and the longest match wins, so "high fructose corn syrup" beats "corn syrup".
+- If a swap matches something it shouldn't (like "butter" inside "cocoa butter"), add that phrase to `"never_swap"`.
+- Run `python -m pytest tests/test_replacements.py` afterwards.
 
 ## Known limitations
 
-- OCR works best on clear, flat, well-lit photos of printed text. Curved packages, glare, or tiny fonts reduce accuracy.
+- OCR works best on clear, flat, well-lit photos of printed text. Very small or very blurry photos are still only partly read: the 470-pixel-wide blurry test image gets 4 of 9 ingredients. The app shows a warning when OCR confidence is below 70%.
+- The hard test images are synthetic. They are made to copy real problems (rotation, darkness, blur, shadow, white-on-dark), but each photo was not taken of a real package. Test with a few real phone photos before the demo.
+- Curved packages, glare and strong perspective (photo taken at an angle) are not corrected.
 - Only English labels are supported.
-- iPhone HEIC photos are not supported — export as JPG/PNG first.
-- Swaps come from a fixed list of ~30 common ingredients; anything not in the list gets no suggestion.
+- iPhone HEIC photos are not supported; export as JPG/PNG first. Most browsers can't preview TIFF files, but they still upload and work.
+- OCR typo fixing only changes long words that are very similar to a known word, so some misreads stay as they are. Every change is shown to the user.
+- Swaps come from a fixed list of 63 ingredients; anything not in the list gets no suggestion.
+- Analysis takes about 1–2 seconds per photo because several clean-ups are tried.
 - Suggestions are general cooking/nutrition ideas, not medical or dietary advice.

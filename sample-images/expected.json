@@ -1,0 +1,72 @@
+{
+  "cookie-label.png": {
+    "difficulty": "clean (Sprint A baseline)",
+    "expected": [
+      "enriched flour",
+      "sugar",
+      "palm oil",
+      "high fructose corn syrup",
+      "salt",
+      "butter",
+      "artificial flavors"
+    ]
+  },
+  "cereal-rotated.jpg": {
+    "difficulty": "photo taken sideways (rotated 90 degrees)",
+    "expected": [
+      "sugar",
+      "corn syrup",
+      "brown sugar syrup",
+      "salt",
+      "canola oil",
+      "bht"
+    ]
+  },
+  "granola-bar-dark.jpg": {
+    "difficulty": "dark, low-contrast photo with a slight tilt",
+    "expected": [
+      "brown rice syrup",
+      "chocolate chips",
+      "sugar",
+      "sunflower oil",
+      "white rice flour",
+      "sea salt",
+      "caramel color"
+    ]
+  },
+  "crackers-blurry-lowres.jpg": {
+    "difficulty": "small, blurry, low-quality JPEG",
+    "expected": [
+      "enriched wheat flour",
+      "soybean oil",
+      "cheddar cheese",
+      "salt",
+      "shortening",
+      "sugar",
+      "dextrose",
+      "monosodium glutamate",
+      "yellow 5"
+    ]
+  },
+  "soda-shadow-noisy.jpg": {
+    "difficulty": "uneven lighting (shadow) and camera noise",
+    "expected": [
+      "high fructose corn syrup",
+      "caramel color",
+      "phosphoric acid",
+      "sodium benzoate",
+      "aspartame"
+    ]
+  },
+  "pizza-white-on-dark.png": {
+    "difficulty": "white text on a dark background, condensed font",
+    "expected": [
+      "bleached flour",
+      "partially hydrogenated soybean oil",
+      "sugar",
+      "mozzarella cheese",
+      "sodium nitrite",
+      "cream"
+    ]
+  }
+}
