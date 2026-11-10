@@ -2,24 +2,17 @@
 Ingredient Swap App - FastAPI backend.
 
 Flow for POST /analyze:
-    uploaded image -> OCR text -> parsed ingredients -> healthier swaps -> JSON
+    uploaded image -> validate -> OCR text -> parsed ingredients
+                   -> fix OCR typos -> healthier swaps -> JSON
 """
-
-import io
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from PIL import Image
 
-from ingredient_parser import parse_ingredients
-from ocr import OCRError, extract_text
-from replacements import find_replacements
-
-ALLOWED_TYPES = {"image/png", "image/jpeg", "image/jpg", "image/webp", "image/bmp", "image/tiff"}
-# Real formats as Pillow names them. Some phone cameras save JPEGs that Pillow reads as MPO.
-ALLOWED_FORMATS = {"PNG", "JPEG", "MPO", "WEBP", "BMP", "TIFF"}
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
-UNSUPPORTED_TYPE_MESSAGE = "Unsupported file type. Please upload a PNG, JPG, WEBP, BMP or TIFF image."
+from ingredient_parser import fix_ocr_typos, parse_ingredients
+from ocr import OCRError, read_label
+from replacements import REPLACEMENTS, find_replacements
+from validation import ALLOWED_EXTENSIONS, MAX_FILE_SIZE, UploadError, validate_upload
 
 app = FastAPI(title="Ingredient Swap App")
 
@@ -35,55 +28,58 @@ app.add_middleware(
 @app.get("/")
 def health():
     """Health check: confirms the backend is running."""
-    return {"status": "ok", "message": "Ingredient Swap API is running"}
+    return {
+        "status": "ok",
+        "message": "Ingredient Swap API is running",
+        "swaps_available": len(REPLACEMENTS),
+        "accepted_files": sorted(ALLOWED_EXTENSIONS),
+        "max_file_size_mb": MAX_FILE_SIZE // (1024 * 1024),
+    }
 
 
+# A plain "def" (not "async def"): FastAPI runs it in a worker thread, so a slow
+# OCR request does not freeze the server for other requests.
 @app.post("/analyze")
-async def analyze(file: UploadFile = File(...)):
+def analyze(file: UploadFile = File(...)):
     """Take an ingredient-list image and return ingredients plus healthier swaps."""
 
-    # 1. Validate the upload.
-    if file.content_type not in ALLOWED_TYPES:
-        raise HTTPException(status_code=400, detail=UNSUPPORTED_TYPE_MESSAGE)
-
-    image_bytes = await file.read()
-    if not image_bytes:
-        raise HTTPException(status_code=400, detail="The uploaded file is empty.")
-    if len(image_bytes) > MAX_FILE_SIZE:
-        raise HTTPException(status_code=400, detail="The image is too large (max 10 MB).")
-
-    # Check the real format from the file's contents; the content type is only a label.
-    # Files Pillow can't open (corrupt, or too many pixels) get their clear error from OCR below.
+    # 1. Validate the upload (see validation.py).
+    image_bytes = file.file.read()
     try:
-        with Image.open(io.BytesIO(image_bytes)) as image:
-            real_format = image.format
-    except (Image.DecompressionBombError, OSError):  # UnidentifiedImageError is an OSError
-        real_format = None
-    if real_format is not None and real_format not in ALLOWED_FORMATS:
-        raise HTTPException(status_code=400, detail=UNSUPPORTED_TYPE_MESSAGE)
+        validate_upload(file.filename, file.content_type, image_bytes)
+    except UploadError as error:
+        raise HTTPException(status_code=error.status, detail=str(error))
 
-    # 2. OCR: image -> text.
+    # 2. OCR: image -> text (see ocr.py).
     try:
-        text = extract_text(image_bytes)
+        ocr = read_label(image_bytes)
     except OCRError as error:
         raise HTTPException(status_code=422, detail=str(error))
 
+    text = ocr["text"]
     if not text:
         raise HTTPException(
             status_code=422,
             detail="No text was found in the image. Try a clearer, well-lit photo of the ingredient list.",
         )
 
-    # 3. Parse text -> ingredient list.
-    ingredients = parse_ingredients(text)
+    # 3. Parse text -> ingredient list, then repair small OCR misreads.
+    ingredients, corrections = fix_ocr_typos(parse_ingredients(text))
 
     # 4. Replacement logic.
     suggestions = find_replacements(ingredients)
 
-    # 5. Structured response for the frontend.
+    # 5. Structured response for the frontend. The first four fields are the
+    #    same as Sprint A; "ocr" and "corrections" are new in Sprint B.
     return {
         "filename": file.filename,
         "extracted_text": text,
         "ingredients": ingredients,
         "suggestions": suggestions,
+        "ocr": {
+            "method": ocr["method"],
+            "confidence": ocr["confidence"],
+            "rotated": ocr["rotated"],
+        },
+        "corrections": corrections,
     }

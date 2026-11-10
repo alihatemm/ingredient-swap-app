@@ -2,49 +2,11 @@ import { useEffect, useState } from "react";
 import { analyzeImage } from "./api.js";
 import ImageUpload from "./components/ImageUpload.jsx";
 import SwapResults from "./components/SwapResults.jsx";
-
-// Same types and size limit as the backend (backend/main.py).
-const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/bmp", "image/tiff"];
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-const MAX_SIDE = 4000; // px; bigger photos are shrunk before upload
-
-// Shrink images whose longest side is over MAX_SIDE to a JPEG, keeping aspect ratio.
-// <img> and drawImage both apply the photo's EXIF orientation.
-async function shrinkImage(file) {
-  const url = URL.createObjectURL(file);
-  try {
-    const img = new Image();
-    img.src = url;
-    try {
-      await img.decode();
-    } catch (err) {
-      // Most browsers can't decode TIFF; send it as-is and let the backend check it.
-      if (file.type === "image/tiff") return file;
-      throw err;
-    }
-
-    const scale = MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight);
-    if (scale >= 1) return file;
-
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(img.naturalWidth * scale);
-    canvas.height = Math.round(img.naturalHeight * scale);
-    const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#fff"; // JPEG has no transparency; keep it white, not black
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.9));
-    if (!blob) throw new Error("Could not encode the resized image.");
-    const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
-    return new File([blob], name, { type: "image/jpeg" });
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
+import { validateAndPrepare } from "./validation.js";
 
 export default function App() {
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState(null); // the file that will be uploaded
+  const [fileInfo, setFileInfo] = useState(null); // name, size, dimensions for display
   const [previewUrl, setPreviewUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -61,30 +23,22 @@ export default function App() {
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
-  async function handleFileChange(newFile) {
-    setError("");
+  function clearFile() {
+    setFile(null);
+    setFileInfo(null);
     setResult(null);
-    setFile(null); // a rejected file stays cleared
-    if (!newFile) return;
+    setError("");
+  }
 
-    if (!ALLOWED_TYPES.includes(newFile.type)) {
-      setError("Please choose a PNG, JPG, WEBP, BMP or TIFF image.");
-      return;
-    }
-
-    let upload;
+  async function handleFileChange(newFile) {
+    clearFile(); // a rejected file stays cleared
     try {
-      upload = await shrinkImage(newFile);
-    } catch {
-      setError("Your browser could not process this image. Please try a lower-resolution photo.");
-      return;
+      const { upload, info } = await validateAndPrepare(newFile);
+      setFile(upload);
+      setFileInfo(info);
+    } catch (err) {
+      setError(err.message);
     }
-
-    if (upload.size > MAX_FILE_SIZE) {
-      setError("The image is too large (max 10 MB). Please choose a smaller file.");
-      return;
-    }
-    setFile(upload);
   }
 
   async function handleAnalyze() {
@@ -105,24 +59,58 @@ export default function App() {
 
   return (
     <main className="app">
-      <header>
+      <header className="app-header">
         <h1>Ingredient Swap</h1>
         <p className="muted">
           Upload a photo of a food label's ingredient list to get healthier replacement ideas.
         </p>
       </header>
 
-      <ImageUpload
-        file={file}
-        previewUrl={previewUrl}
-        onFileChange={handleFileChange}
-        onAnalyze={handleAnalyze}
-        loading={loading}
-      />
+      <div className="layout">
+        <div className="left-column">
+          <ImageUpload
+            file={file}
+            fileInfo={fileInfo}
+            previewUrl={previewUrl}
+            onFileChange={handleFileChange}
+            onClear={clearFile}
+            onAnalyze={handleAnalyze}
+            loading={loading}
+          />
+        </div>
 
-      {loading && <p className="status">Reading the label… this can take a few seconds.</p>}
-      {error && <p className="error">{error}</p>}
-      {result && <SwapResults result={result} />}
+        <div className="right-column" aria-live="polite">
+          {error && (
+            <div className="error" role="alert">
+              <strong>Something went wrong.</strong> {error}
+            </div>
+          )}
+
+          {loading && (
+            <section className="card status-card">
+              <span className="spinner dark" aria-hidden="true" />
+              <div>
+                <strong>Reading the label…</strong>
+                <p className="muted">
+                  Straightening, cleaning up and reading the photo. This usually takes 1–3 seconds.
+                </p>
+              </div>
+            </section>
+          )}
+
+          {result && <SwapResults result={result} />}
+
+          {!result && !loading && !error && (
+            <section className="card empty-state">
+              <h2>Your results will appear here</h2>
+              <p className="muted">
+                Choose a photo of an ingredient list on the left, then press <em>Find healthier swaps</em>.
+                Try one of the images in the <code>sample-images</code> folder.
+              </p>
+            </section>
+          )}
+        </div>
+      </div>
     </main>
   );
 }
