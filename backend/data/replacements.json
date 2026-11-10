@@ -1,0 +1,93 @@
+{
+  "_how_to_edit": "Add a swap under 'swaps': the key is the ingredient in lowercase, matched as whole words (longest match wins). Add phrases that must NEVER get a swap to 'never_swap'. Categories: sweetener, artificial sweetener, fat & oil, grain & flour, salt, dairy, preservative, color, additive.",
+
+  "swaps": {
+    "sugar": {"replacement": "honey or maple syrup (in moderation)", "reason": "Less refined and sweeter, so you can use less.", "category": "sweetener"},
+    "high fructose corn syrup": {"replacement": "pure maple syrup or fruit puree", "reason": "Avoids a highly processed sweetener linked to excess calorie intake.", "category": "sweetener"},
+    "corn syrup": {"replacement": "honey or fruit puree", "reason": "Less processed source of sweetness.", "category": "sweetener"},
+    "dextrose": {"replacement": "fruit puree", "reason": "Natural sweetness with fiber.", "category": "sweetener"},
+    "brown sugar": {"replacement": "mashed banana or date paste", "reason": "Sweetness that comes with fiber and potassium.", "category": "sweetener"},
+    "brown rice syrup": {"replacement": "date paste or a little maple syrup", "reason": "Brown rice syrup is almost pure glucose and spikes blood sugar.", "category": "sweetener"},
+    "glucose syrup": {"replacement": "fruit puree", "reason": "Adds sweetness with fiber instead of a refined syrup.", "category": "sweetener"},
+    "evaporated cane juice": {"replacement": "fruit puree or less added sugar", "reason": "It is still sugar under another name.", "category": "sweetener"},
+    "maltodextrin": {"replacement": "whole grains or a fiber thickener like inulin", "reason": "Highly processed starch that raises blood sugar quickly.", "category": "sweetener"},
+
+    "aspartame": {"replacement": "stevia or monk fruit", "reason": "Plant-based sweetener alternative.", "category": "artificial sweetener"},
+    "sucralose": {"replacement": "stevia or monk fruit", "reason": "Plant-based sweetener alternative.", "category": "artificial sweetener"},
+    "acesulfame potassium": {"replacement": "stevia or monk fruit", "reason": "Plant-based sweetener alternative.", "category": "artificial sweetener"},
+    "saccharin": {"replacement": "stevia or monk fruit", "reason": "Plant-based sweetener alternative.", "category": "artificial sweetener"},
+
+    "white flour": {"replacement": "whole wheat flour", "reason": "More fiber, vitamins and minerals.", "category": "grain & flour"},
+    "enriched flour": {"replacement": "whole wheat flour", "reason": "Whole grains keep the fiber that refining removes.", "category": "grain & flour"},
+    "enriched wheat flour": {"replacement": "whole wheat flour", "reason": "Whole grains keep the fiber that refining removes.", "category": "grain & flour"},
+    "bleached flour": {"replacement": "whole wheat flour", "reason": "Whole grains keep the fiber that refining removes.", "category": "grain & flour"},
+    "wheat flour": {"replacement": "whole wheat flour", "reason": "Whole grains keep the fiber that refining removes.", "category": "grain & flour"},
+    "white rice": {"replacement": "brown rice or quinoa", "reason": "More fiber and protein.", "category": "grain & flour"},
+    "white rice flour": {"replacement": "brown rice flour", "reason": "Keeps the bran, so more fiber and minerals.", "category": "grain & flour"},
+    "potassium bromate": {"replacement": "unbromated flour", "reason": "Potassium bromate is a flour additive banned in many countries.", "category": "grain & flour"},
+
+    "palm oil": {"replacement": "olive oil", "reason": "Less saturated fat and more heart-healthy fats.", "category": "fat & oil"},
+    "palm kernel oil": {"replacement": "olive oil", "reason": "Palm kernel oil is mostly saturated fat.", "category": "fat & oil"},
+    "hydrogenated": {"replacement": "olive oil or avocado oil", "reason": "Hydrogenated oils can contain trans fats.", "category": "fat & oil"},
+    "partially hydrogenated": {"replacement": "olive oil or avocado oil", "reason": "Partially hydrogenated oils are the main source of artificial trans fats.", "category": "fat & oil"},
+    "hydrogenated oil": {"replacement": "olive oil or avocado oil", "reason": "Avoids trans fats.", "category": "fat & oil"},
+    "partially hydrogenated oil": {"replacement": "olive oil or avocado oil", "reason": "Avoids trans fats.", "category": "fat & oil"},
+    "vegetable oil": {"replacement": "olive oil", "reason": "Higher in monounsaturated fats.", "category": "fat & oil"},
+    "soybean oil": {"replacement": "extra virgin olive oil", "reason": "More monounsaturated fat and less omega-6.", "category": "fat & oil"},
+    "cottonseed oil": {"replacement": "extra virgin olive oil", "reason": "Highly refined oil; olive oil has more heart-healthy fats.", "category": "fat & oil"},
+    "canola oil": {"replacement": "extra virgin olive oil", "reason": "Less processed, with more antioxidants.", "category": "fat & oil"},
+    "shortening": {"replacement": "olive oil or unsweetened applesauce", "reason": "Cuts saturated and trans fats.", "category": "fat & oil"},
+    "lard": {"replacement": "olive oil or avocado oil", "reason": "Much less saturated fat.", "category": "fat & oil"},
+    "butter": {"replacement": "olive oil or avocado", "reason": "Less saturated fat.", "category": "fat & oil"},
+    "margarine": {"replacement": "olive oil", "reason": "Avoids processed fats.", "category": "fat & oil"},
+    "mayonnaise": {"replacement": "Greek yogurt or mashed avocado", "reason": "Less fat, more nutrients.", "category": "fat & oil"},
+
+    "salt": {"replacement": "herbs and spices or low-sodium salt", "reason": "Lowers sodium intake.", "category": "salt"},
+    "monosodium glutamate": {"replacement": "herbs, garlic or onion powder", "reason": "Flavor without added sodium.", "category": "salt"},
+    "msg": {"replacement": "herbs, garlic or onion powder", "reason": "Flavor without added sodium.", "category": "salt"},
+
+    "cream": {"replacement": "Greek yogurt", "reason": "Less fat and more protein.", "category": "dairy"},
+    "sour cream": {"replacement": "plain Greek yogurt", "reason": "Less fat and more protein.", "category": "dairy"},
+    "cream cheese": {"replacement": "Neufchatel or Greek yogurt cream cheese", "reason": "About a third less fat.", "category": "dairy"},
+    "cheddar cheese": {"replacement": "reduced-fat cheddar", "reason": "Less saturated fat with the same flavor.", "category": "dairy"},
+    "mozzarella cheese": {"replacement": "part-skim mozzarella", "reason": "Less saturated fat and fewer calories.", "category": "dairy"},
+    "milk chocolate": {"replacement": "dark chocolate (70%+ cocoa)", "reason": "Less sugar and more antioxidants.", "category": "dairy"},
+    "white chocolate": {"replacement": "dark chocolate (70%+ cocoa)", "reason": "Less sugar and more antioxidants.", "category": "dairy"},
+    "chocolate chips": {"replacement": "dark chocolate chips (70%+ cocoa)", "reason": "Less sugar and more antioxidants.", "category": "dairy"},
+
+    "sodium benzoate": {"replacement": "products preserved with vitamin C or vitamin E", "reason": "Avoids a synthetic preservative.", "category": "preservative"},
+    "sodium nitrite": {"replacement": "uncured or nitrite-free meats", "reason": "Processed meats with nitrites are linked to health risks.", "category": "preservative"},
+    "sodium nitrate": {"replacement": "uncured or nitrate-free meats", "reason": "Processed meats with nitrates are linked to health risks.", "category": "preservative"},
+    "bht": {"replacement": "products preserved with vitamin E (mixed tocopherols)", "reason": "Natural antioxidant instead of a synthetic one.", "category": "preservative"},
+    "bha": {"replacement": "products preserved with vitamin E (mixed tocopherols)", "reason": "Natural antioxidant instead of a synthetic one.", "category": "preservative"},
+    "tbhq": {"replacement": "products preserved with vitamin E (mixed tocopherols)", "reason": "Natural antioxidant instead of a synthetic one.", "category": "preservative"},
+
+    "caramel color": {"replacement": "products without added coloring", "reason": "Some caramel colors contain unwanted by-products; color adds nothing nutritionally.", "category": "color"},
+    "red 40": {"replacement": "beet juice coloring", "reason": "Plant-based color instead of a synthetic dye.", "category": "color"},
+    "yellow 5": {"replacement": "turmeric or annatto coloring", "reason": "Plant-based color instead of a synthetic dye.", "category": "color"},
+    "yellow 6": {"replacement": "paprika or annatto coloring", "reason": "Plant-based color instead of a synthetic dye.", "category": "color"},
+    "blue 1": {"replacement": "spirulina extract coloring", "reason": "Plant-based color instead of a synthetic dye.", "category": "color"},
+    "titanium dioxide": {"replacement": "products without whitening agents", "reason": "Titanium dioxide is no longer allowed as a food additive in the EU.", "category": "color"},
+
+    "artificial flavors": {"replacement": "natural spices, vanilla or citrus zest", "reason": "Avoids synthetic additives.", "category": "additive"},
+    "artificial flavor": {"replacement": "natural spices, vanilla or citrus zest", "reason": "Avoids synthetic additives.", "category": "additive"},
+    "phosphoric acid": {"replacement": "sparkling water with lemon or lime", "reason": "High intake from sodas is linked to lower bone density.", "category": "additive"},
+    "carrageenan": {"replacement": "products thickened with guar gum, or none", "reason": "Some people find carrageenan irritates the gut.", "category": "additive"}
+  },
+
+  "never_swap": [
+    "whole wheat",
+    "whole grain",
+    "cocoa butter",
+    "shea butter",
+    "peanut butter",
+    "apple butter",
+    "cream of tartar",
+    "buttermilk",
+    "olive oil",
+    "avocado oil",
+    "coconut sugar",
+    "low sodium salt",
+    "sugar free"
+  ]
+}
