@@ -15,19 +15,21 @@
 6. Frontend displays ingredient → replacement suggestions.
 
 ## Where each card lives in the code
-| Card | Files |
-|---|---|
-| Image Upload | `frontend/src/components/ImageUpload.jsx` |
-| Ingredient Text Extraction | `backend/ocr.py`, `backend/ingredient_parser.py` |
-| Ingredient Replacement Logic | `backend/replacements.py` |
-| Display Swap Suggestions | `frontend/src/components/SwapResults.jsx` |
-| End-to-End Integration & Demo | `backend/main.py` (`/analyze`), `frontend/src/api.js`, `frontend/src/App.jsx`, `sample-images/cookie-label.png` |
+| Card | Owner | Files |
+|---|---|---|
+| #1122 Image Upload | Alejandro | `frontend/src/components/ImageUpload.jsx` |
+| #1123 Ingredient Text Extraction | Mohamed | `backend/ocr.py`, `backend/ingredient_parser.py` |
+| #1124 Ingredient Replacement Logic | Henry | `backend/replacements.py` |
+| #1125 Display Swap Suggestions | Anthony | `frontend/src/components/SwapResults.jsx` |
+| #1121 End-to-End Integration & Demo | Ali | `backend/main.py` (`/analyze`), `frontend/src/api.js`, `frontend/src/App.jsx`, `sample-images/cookie-label.png` |
+
+Full evidence, results and screenshots: [docs/SPRINT_A_EVIDENCE.md](docs/SPRINT_A_EVIDENCE.md)
 
 ## Acceptance criteria status
-- [x] User can upload an ingredient-list image.
-- [x] Ingredients from the image are extracted successfully.
-- [x] At least one matching healthier replacement suggestion is displayed.
-- [x] With `sample-images/cookie-label.png`, the app shows replacement suggestions with no manual data entry between steps (8 swaps in testing).
+- [x] User can upload an ingredient-list image. (#1122)
+- [x] Ingredients from the image are extracted successfully: 13/13 on `cookie-label.png`. (#1123)
+- [x] At least one matching healthier replacement suggestion is displayed: 8 swaps, each with a reason. (#1124, #1125)
+- [x] With `sample-images/cookie-label.png`, the app shows replacement suggestions with no manual data entry between steps: browser end-to-end run, 21 checks passed. (#1121)
 
 ## Demo script
 1. Start backend (`uvicorn main:app --reload --port 8000`) and frontend (`npm run dev`).
