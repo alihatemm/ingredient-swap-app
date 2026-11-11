@@ -1,7 +1,7 @@
 # ingredient-swap-app
 Capstone project that extracts ingredients from food-label images and suggests healthier replacements.
 
-**Sprint A** built the working flow. **Sprint B** (due Nov 13) makes it reliable on harder photos, adds more swaps, polishes the UI and tightens upload validation. See [What changed in Sprint B](#what-changed-in-sprint-b) and the full evidence in [docs/SPRINT_B_EVIDENCE.md](docs/SPRINT_B_EVIDENCE.md).
+**Sprint A** built the working flow ([evidence](docs/SPRINT_A_EVIDENCE.md)). **Sprint B** (due Nov 13) makes it reliable on harder photos, adds more swaps, polishes the UI and tightens upload validation. See [What changed in Sprint B](#what-changed-in-sprint-b) and the full evidence in [docs/SPRINT_B_EVIDENCE.md](docs/SPRINT_B_EVIDENCE.md).
 
 ## What it does
 
@@ -49,6 +49,8 @@ ingredient-swap-app/
 ├── sample-images/            # 6 test labels (clean + 5 hard ones) and expected.json
 │   └── generate_samples.py   # recreates the hard test images
 ├── docs/
+│   ├── SPRINT_A_EVIDENCE.md  # Sprint A card-by-card evidence
+│   ├── sprint-a-evidence/    # screenshots
 │   ├── SPRINT_B_EVIDENCE.md  # card-by-card evidence and test results
 │   └── sprint-b-evidence/    # screenshots
 ├── README.md
